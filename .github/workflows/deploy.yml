@@ -1,0 +1,56 @@
+name: Build and Deploy Flutter Web App
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Flutter
+      uses: subosito/flutter-action@v2
+      with:
+        flutter-version: '3.24.0'  # Latest stable version
+        channel: 'stable'
+        
+    - name: Get dependencies
+      run: flutter pub get
+      
+    - name: Create environment configuration
+      run: |
+        echo '{
+          "SUPABASE_URL": "${{ secrets.SUPABASE_URL }}",
+          "SUPABASE_ANON_KEY": "${{ secrets.SUPABASE_ANON_KEY }}",
+          "OPENAI_API_KEY": "${{ secrets.OPENAI_API_KEY }}",
+          "GEMINI_API_KEY": "${{ secrets.GEMINI_API_KEY }}",
+          "ANTHROPIC_API_KEY": "${{ secrets.ANTHROPIC_API_KEY }}",
+          "PERPLEXITY_API_KEY": "${{ secrets.PERPLEXITY_API_KEY }}"
+        }' > env.json
+        
+    - name: Enable web support
+      run: flutter config --enable-web
+      
+    - name: Build web app
+      run: flutter build web --web-renderer html --release
+      
+    - name: Deploy to Netlify
+      uses: nwtgck/actions-netlify@v3.0
+      with:
+        publish-dir: './build/web'
+        production-branch: main
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+        deploy-message: "Deploy from GitHub Actions"
+        enable-pull-request-comment: false
+        enable-commit-comment: true
+        overwrites-pull-request-comment: true
+      env:
+        NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
+        NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
+      timeout-minutes: 1
