@@ -35,7 +35,7 @@ dependencies:
   universal_html: ^2.2.4
   supabase_flutter: ^2.10.0  # Required for database operations with products and enhanced chat functionality
   mime: ^1.0.4
-  path: ^1.9.1
+  path: ^1.9.0
   time_range_picker: ^2.3.1
 
 dev_dependencies:
